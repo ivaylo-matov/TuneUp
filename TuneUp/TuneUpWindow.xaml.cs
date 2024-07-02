@@ -33,6 +33,9 @@ namespace TuneUp
         /// </summary>
         private static double sidebarHeightOffset = 200;
 
+        /// <summary>
+        /// Indicates if the TuneUp window is initializing to prevent automatic node selection.
+        /// </summary>
         public bool IsInitializing { get; set; } = true;
 
         /// <summary>
@@ -55,20 +58,31 @@ namespace TuneUp
             commandExecutive = vlp.CommandExecutive;
             viewModelCommandExecutive = vlp.ViewModelCommandExecutive;
             uniqueId = id;
+
+            // Suspend the SelectionChanged event during initialization
+            SuspendSelectionChanged();
         }
 
+        /// <summary>
+        /// Handles the Loaded event for the NodeAnalysisTable to ensure no item is selected 
+        /// and marks initialization as complete by setting IsInitializing to false and resuming SelectionChanged handling.
+        /// </summary>
         private void NodeAnalysisTable_Loaded(object sender, RoutedEventArgs e)
         {
             // Ensure no item is selected after the DataGrid is fully loaded
             NodeAnalysisTable.SelectedItem = null;
-            IsInitializing = false; // Initialization complete
+            // Initialization complete
+            IsInitializing = false;
+            this.ResumeSelectionChanged();
         }
 
         private void NodeAnalysisTable_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             // Clear selection when DataContext changes
             NodeAnalysisTable.SelectedItem = null;
-            IsInitializing = false; // Initialization complete
+            // Initialization complete
+            IsInitializing = false;
+
         }
 
         private void DynamoWindow_SizeChanged(object sender, System.Windows.SizeChangedEventArgs e)
