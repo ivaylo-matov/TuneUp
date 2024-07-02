@@ -73,10 +73,6 @@ namespace TuneUp
             {
                 dp.AddMenuItem(MenuBarType.View, TuneUpMenuItem);
             }
-
-            // Temporarily disable the SelectionChanged event handler
-            // to prevent automatic node selection and workspace centering
-            TuneUpView.SuspendSelectionChanged();
         }
 
         /// <summary>
@@ -114,11 +110,6 @@ namespace TuneUp
             if (this.TuneUpMenuItem != null)
             {
                 this.TuneUpMenuItem.IsChecked = false;
-            }
-
-            if (TuneUpView != null)
-            {
-                TuneUpView.SuspendSelectionChanged();
             }
         }
     }
