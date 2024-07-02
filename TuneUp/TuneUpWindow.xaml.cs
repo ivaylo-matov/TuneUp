@@ -33,6 +33,8 @@ namespace TuneUp
         /// </summary>
         private static double sidebarHeightOffset = 200;
 
+        public bool IsInitializing { get; set; } = true;
+
         /// <summary>
         /// Create the TuneUp Window
         /// </summary>
@@ -44,10 +46,29 @@ namespace TuneUp
             // Initialize the height of the datagrid in order to make sure
             // vertical scrollbar can be displayed correctly.
             this.NodeAnalysisTable.Height = vlp.DynamoWindow.Height - sidebarHeightOffset;
+
+            // Set the Loaded event for the DataGrid
+            this.NodeAnalysisTable.Loaded += NodeAnalysisTable_Loaded;
+            this.NodeAnalysisTable.DataContextChanged += NodeAnalysisTable_DataContextChanged;
+
             vlp.DynamoWindow.SizeChanged += DynamoWindow_SizeChanged;
             commandExecutive = vlp.CommandExecutive;
             viewModelCommandExecutive = vlp.ViewModelCommandExecutive;
             uniqueId = id;
+        }
+
+        private void NodeAnalysisTable_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Ensure no item is selected after the DataGrid is fully loaded
+            NodeAnalysisTable.SelectedItem = null;
+            IsInitializing = false; // Initialization complete
+        }
+
+        private void NodeAnalysisTable_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            // Clear selection when DataContext changes
+            NodeAnalysisTable.SelectedItem = null;
+            IsInitializing = false; // Initialization complete
         }
 
         private void DynamoWindow_SizeChanged(object sender, System.Windows.SizeChangedEventArgs e)
@@ -56,8 +77,20 @@ namespace TuneUp
             this.NodeAnalysisTable.Height = e.NewSize.Height - sidebarHeightOffset;
         }
 
+        public void SuspendSelectionChanged()
+        {
+            this.NodeAnalysisTable.SelectionChanged -= NodeAnalysisTable_SelectionChanged;
+        }
+
+        public void ResumeSelectionChanged()
+        {
+            this.NodeAnalysisTable.SelectionChanged += NodeAnalysisTable_SelectionChanged;
+        }
+
         private void NodeAnalysisTable_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (IsInitializing) return;
+
             // Get NodeModel(s) that correspond to selected row(s)
             var selectedNodes = new List<NodeModel>();
             foreach (var item in e.AddedItems)

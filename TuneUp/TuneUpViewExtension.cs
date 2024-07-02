@@ -53,6 +53,8 @@ namespace TuneUp
                 }
             };
 
+            //ViewModel.NodeAnalysisTable = TuneUpView.NodeAnalysisTable;
+
             // Bind the IsChecked property to the IsTuneUpActive property
             TuneUpMenuItem.Checked += (sender, args) => ViewModel.IsTuneUpChecked = true;
             TuneUpMenuItem.Unchecked += (sender, args) => ViewModel.IsTuneUpChecked = false;
@@ -73,6 +75,14 @@ namespace TuneUp
             {
                 dp.AddMenuItem(MenuBarType.View, TuneUpMenuItem);
             }
+
+            // Suspend and resume the SelectionChanged event handler
+            TuneUpView.SuspendSelectionChanged();
+            ViewModel.ResetProfiledNodes();
+            TuneUpView.ResumeSelectionChanged();
+
+            // Set the IsInitializing flag to false after the DataContext is set
+            //TuneUpView.IsInitializing = false;
         }
 
         /// <summary>
@@ -110,6 +120,10 @@ namespace TuneUp
             if (this.TuneUpMenuItem != null)
             {
                 this.TuneUpMenuItem.IsChecked = false;
+            }
+            if (TuneUpView != null)
+            {
+                TuneUpView.SuspendSelectionChanged();
             }
         }
     }
