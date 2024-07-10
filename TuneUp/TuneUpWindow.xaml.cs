@@ -19,27 +19,6 @@ namespace TuneUp
     /// </summary>
     public partial class TuneUpWindow : Window
     {
-        // ip code
-        private bool _arrowVisibility;
-        public bool ArrowVisibility
-        {
-            get => _arrowVisibility;
-            set
-            {
-                _arrowVisibility = value;
-                OnPropertyChanged(nameof(ArrowVisibility));
-            }
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-
-
-
-
         private ViewLoadedParams viewLoadedParams;
 
         private ICommandExecutive commandExecutive;
@@ -126,6 +105,7 @@ namespace TuneUp
             var viewModel = NodeAnalysisTable.DataContext as TuneUpWindowViewModel;
 
             
+
             if (viewModel != null)
             {
                 switch (column.Header.ToString())
@@ -140,15 +120,17 @@ namespace TuneUp
                         viewModel.SortingOrder = "time";
                         break;
                 }
-                // Apply custom sorting to ensure total times are at the bottom
-                viewModel.ApplySorting();
-                e.Handled = true;
+                
 
                 if (viewModel.SortDirection == ListSortDirection.Descending)
                 {
-                    ArrowVisibility = true;
+                    column.SortDirection = ListSortDirection.Descending;
                 }
-                else ArrowVisibility = false;
+                else column.SortDirection = ListSortDirection.Ascending;
+
+                // Apply custom sorting to ensure total times are at the bottom
+                viewModel.ApplySorting();
+                e.Handled = true;
             }
         }
     }
@@ -164,7 +146,7 @@ namespace TuneUp
             if (value is bool _arrowVisibility)
             {
                 // Return visible if HasChildren is true, else collapsed
-                return _arrowVisibility ? Visibility.Visible : Visibility.Collapsed;
+                return _arrowVisibility ? Visibility.Collapsed : Visibility.Visible;
             }
 
             // Default to collapsed if the input is not a boolean
