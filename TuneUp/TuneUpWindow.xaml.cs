@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using Dynamo.Extensions;
 using Dynamo.Graph.Nodes;
 using Dynamo.Models;
@@ -16,6 +19,27 @@ namespace TuneUp
     /// </summary>
     public partial class TuneUpWindow : Window
     {
+        // ip code
+        private bool _arrowVisibility;
+        public bool ArrowVisibility
+        {
+            get => _arrowVisibility;
+            set
+            {
+                _arrowVisibility = value;
+                OnPropertyChanged(nameof(ArrowVisibility));
+            }
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+
+
+
+
         private ViewLoadedParams viewLoadedParams;
 
         private ICommandExecutive commandExecutive;
@@ -101,6 +125,7 @@ namespace TuneUp
             var column = e.Column;
             var viewModel = NodeAnalysisTable.DataContext as TuneUpWindowViewModel;
 
+            
             if (viewModel != null)
             {
                 switch (column.Header.ToString())
@@ -118,7 +143,37 @@ namespace TuneUp
                 // Apply custom sorting to ensure total times are at the bottom
                 viewModel.ApplySorting();
                 e.Handled = true;
+
+                if (viewModel.SortDirection == ListSortDirection.Descending)
+                {
+                    ArrowVisibility = true;
+                }
+                else ArrowVisibility = false;
             }
+        }
+    }
+
+
+
+
+
+    public class SortDirectionToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool _arrowVisibility)
+            {
+                // Return visible if HasChildren is true, else collapsed
+                return _arrowVisibility ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            // Default to collapsed if the input is not a boolean
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }
