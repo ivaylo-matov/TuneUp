@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using Dynamo.Extensions;
 using Dynamo.Graph.Nodes;
 using Dynamo.Models;
@@ -101,61 +99,26 @@ namespace TuneUp
         /// </summary>
         private void NodeAnalysisTable_Sorting(object sender, DataGridSortingEventArgs e)
         {
-            var column = e.Column;
             var viewModel = NodeAnalysisTable.DataContext as TuneUpWindowViewModel;
-
-            
-
             if (viewModel != null)
             {
-                switch (column.Header.ToString())
+                viewModel.SortingOrder = e.Column.Header switch
                 {
-                    case "#":
-                        viewModel.SortingOrder = "number";
-                        break;
-                    case "Name":
-                        viewModel.SortingOrder = "name";
-                        break;
-                    case "Execution Time (ms)":
-                        viewModel.SortingOrder = "time";
-                        break;
-                }
-                
+                    "#" => "number",
+                    "Name" => "name",
+                    "Execution Time (ms)" => "time",
+                    _ => viewModel.SortingOrder
+                };
 
-                if (viewModel.SortDirection == ListSortDirection.Descending)
-                {
-                    column.SortDirection = ListSortDirection.Descending;
-                }
-                else column.SortDirection = ListSortDirection.Ascending;
+                // Set the sorting direction of the datagrid column
+                e.Column.SortDirection = viewModel.SortDirection == ListSortDirection.Descending
+                    ? ListSortDirection.Descending
+                    : ListSortDirection.Ascending;
 
                 // Apply custom sorting to ensure total times are at the bottom
                 viewModel.ApplySorting();
                 e.Handled = true;
             }
-        }
-    }
-
-
-
-
-
-    public class SortDirectionToVisibilityConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is bool _arrowVisibility)
-            {
-                // Return visible if HasChildren is true, else collapsed
-                return _arrowVisibility ? Visibility.Collapsed : Visibility.Visible;
-            }
-
-            // Default to collapsed if the input is not a boolean
-            return Visibility.Collapsed;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
         }
     }
 }
