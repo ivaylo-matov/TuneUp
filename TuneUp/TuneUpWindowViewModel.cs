@@ -39,6 +39,39 @@ namespace TuneUp
     /// </summary>
     public class TuneUpWindowViewModel : NotificationObject, IDisposable
     {
+        private bool showHotspotsEnabled;
+        public bool ShowHotspotsEnabled
+        {
+            get => showHotspotsEnabled;
+            set
+            {
+                showHotspotsEnabled = value;
+                RaisePropertyChanged(nameof(ShowHotspotsEnabled));
+            }
+        }
+
+        private int hotspotMinValue;
+        private int hotspotMaxValue;
+        public int HotspotMinValue
+        {
+            get => hotspotMinValue;
+            set
+            {
+                hotspotMinValue = value;
+                RaisePropertyChanged(nameof(HotspotMinValue));
+            }
+        }
+        public int HotspotMaxValue
+        {
+            get => hotspotMaxValue;
+            set
+            {
+                hotspotMaxValue = value;
+                RaisePropertyChanged(nameof(HotspotMaxValue));
+            }
+        }
+
+
         #region Internal Properties
 
         private ViewLoadedParams viewLoadedParams;
