@@ -20,7 +20,6 @@
                 <ui:SharedResourceDictionary Source="{x:Static ui:SharedDictionaryManager.DynamoModernDictionaryUri}" />
             </ResourceDictionary.MergedDictionaries>
             <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-            <local:ExecutionTimeToBackgroundConverter x:Key="ExecutionTimeToBackgroundConverter" />
         </ResourceDictionary>
     </Window.Resources>
 
@@ -52,15 +51,7 @@
             <Style x:Key="RowStyle1" TargetType="DataGridRow">
                 <!--<Setter Property="Background" Value="#333333"/>-->
                 <!--<Setter Property="Background" Value="{Binding ExecutionMilliseconds, Converter={StaticResource ValueToBrushConverter}}" />-->
-                <Setter Property="Background">
-                    <Setter.Value>
-                        <MultiBinding Converter="{StaticResource ExecutionTimeToBackgroundConverter}">
-                            <Binding Path="ExecutionMilliseconds" />
-                            <Binding Path="DataContext.HotspotMinValue" RelativeSource="{RelativeSource AncestorType=Window}" />
-                            <Binding Path="DataContext.HotspotMaxValue" RelativeSource="{RelativeSource AncestorType=Window}" />
-                        </MultiBinding>
-                    </Setter.Value>
-                </Setter>
+                <Setter Property="Background" Value="{Binding RowBackground}" />
                 <Setter Property="BorderThickness" Value="0.45" />
                 <Setter Property="BorderBrush" Value="#555555" />
                 <Style.Triggers>

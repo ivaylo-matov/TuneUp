@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Windows.Data;
+using System.Windows.Media;
 using Dynamo.Core;
 using Dynamo.Engine.Profiling;
 using Dynamo.Graph.Nodes;
@@ -40,6 +41,8 @@ namespace TuneUp
     public class TuneUpWindowViewModel : NotificationObject, IDisposable
     {
         private bool showHotspotsEnabled;
+        private int hotspotMinValue;
+        private int hotspotMaxValue;
         public bool ShowHotspotsEnabled
         {
             get => showHotspotsEnabled;
@@ -49,28 +52,39 @@ namespace TuneUp
                 RaisePropertyChanged(nameof(ShowHotspotsEnabled));
             }
         }
-
-        private int hotspotMinValue;
         public int HotspotMinValue
         {
             get => hotspotMinValue;
             set
             {
-                hotspotMinValue = value;
-                RaisePropertyChanged(nameof(HotspotMinValue));
+                if (hotspotMinValue != value)
+                {
+                    hotspotMinValue = value;
+                    RaisePropertyChanged(nameof(HotspotMinValue));
+                    UpdateNodeBackgrounds();
+                }
             }
         }
-        private int hotspotMaxValue;
         public int HotspotMaxValue
         {
             get => hotspotMaxValue;
             set
             {
-                hotspotMaxValue = value;
-                RaisePropertyChanged(nameof(HotspotMaxValue));
+                if (hotspotMaxValue != value)
+                {
+                    hotspotMaxValue = value;
+                    RaisePropertyChanged(nameof(HotspotMaxValue));
+                    UpdateNodeBackgrounds();
+                }
             }
         }
-
+        private void UpdateNodeBackgrounds()
+        {
+            foreach (var node in nodeDictionary.Values)
+            {
+                node.UpdateHotspotValues(HotspotMinValue, HotspotMaxValue);
+            }
+        }
 
         #region Internal Properties
 

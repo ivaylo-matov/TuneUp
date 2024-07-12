@@ -113,30 +113,17 @@ namespace TuneUp
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
+
+        private void RefreshDataGrid()
+        {
+            if (NodeAnalysisTable.ItemsSource is ICollectionView collectionView)
+            {
+                collectionView.Refresh();
+            }
+        }
     }
 
     #region Converters
-    public class ExecutionTimeToBackgroundConverter : IMultiValueConverter
-    {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (values[0] is int executionTime &&
-                int.TryParse(values[1]?.ToString(), out int minValue) &&
-                int.TryParse(values[2]?.ToString(), out int maxValue))
-            {
-                if (executionTime < minValue || executionTime > maxValue)
-                {
-                    return Brushes.Red;
-                }
-            }
-            return Brushes.White;
-        }
-
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotSupportedException();
-        }
-    }
 
     public class BoolToVisibilityConverter : IValueConverter
     {
