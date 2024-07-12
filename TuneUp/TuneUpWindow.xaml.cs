@@ -14,6 +14,8 @@ using Dynamo.Utilities;
 using Dynamo.Wpf.Extensions;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using System.Globalization;
+using CoreNodeModels.Input;
 
 namespace TuneUp
 {
@@ -114,36 +116,23 @@ namespace TuneUp
     }
 
     #region Converters
-    public class ValueToBrushConverter : IValueConverter
+    public class ExecutionTimeToBackgroundConverter : IMultiValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            //var viewModel = parameter as TuneUpWindowViewModel;
-            //int input = (int)value;
-
-            //if (viewModel == null || viewModel.HotspotMinValue != null || viewModel.HotspotMaxValue != null) return Brushes.DarkGray;
-
-            //if (viewModel.HotspotMinValue != null && viewModel.HotspotMaxValue != null)
-            //{
-            //    var min = viewModel.HotspotMinValue;
-            //    var max = viewModel.HotspotMaxValue;
-
-            //    if (input > max) return Brushes.Red;
-            //    else if (input < min) return Brushes.Green;
-            //}
-
-            //return Brushes.DarkGray;
-
-            var window = Application.Current.Windows.OfType<TuneUpWindow>().FirstOrDefault();
-            if (window == null)
-                return Brushes.DarkGray;
-
-            return Brushes.Green;
-
-
+            if (values[0] is int executionTime &&
+                int.TryParse(values[1]?.ToString(), out int minValue) &&
+                int.TryParse(values[2]?.ToString(), out int maxValue))
+            {
+                if (executionTime < minValue || executionTime > maxValue)
+                {
+                    return Brushes.Red;
+                }
+            }
+            return Brushes.White;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             throw new NotSupportedException();
         }

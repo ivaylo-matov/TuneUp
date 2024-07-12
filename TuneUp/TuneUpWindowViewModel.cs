@@ -51,7 +51,6 @@ namespace TuneUp
         }
 
         private int hotspotMinValue;
-        private int hotspotMaxValue;
         public int HotspotMinValue
         {
             get => hotspotMinValue;
@@ -61,6 +60,7 @@ namespace TuneUp
                 RaisePropertyChanged(nameof(HotspotMinValue));
             }
         }
+        private int hotspotMaxValue;
         public int HotspotMaxValue
         {
             get => hotspotMaxValue;
