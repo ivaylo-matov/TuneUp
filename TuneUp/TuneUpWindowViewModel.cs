@@ -6,7 +6,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Windows.Data;
-using System.Windows.Media;
 using Dynamo.Core;
 using Dynamo.Engine.Profiling;
 using Dynamo.Graph.Nodes;

@@ -9,6 +9,10 @@ namespace TuneUp
 {
     public class ProfiledNodeViewModel : NotificationObject
     {
+        internal SolidColorBrush hotspotMinValueBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B7D78C"));
+        internal SolidColorBrush hotspotMaxValueBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EB5555"));
+        internal SolidColorBrush defaultRowBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#AAAAAA"));
+
         private int hotspotMinValue;
         private int hotspotMaxValue;
         public int HotspotMinValue
@@ -41,18 +45,21 @@ namespace TuneUp
         {
             get
             {
-                if (ExecutionMilliseconds < HotspotMinValue || ExecutionMilliseconds > HotspotMaxValue)
+                if (ExecutionMilliseconds < HotspotMinValue && HotspotMinValue > 0 && State != ProfiledNodeState.NotExecuted)
                 {
-                    return Brushes.Red;
+                    return hotspotMinValueBrush;
                 }
-                return Brushes.White;
+                if (ExecutionMilliseconds > HotspotMaxValue && HotspotMaxValue > 0 && State != ProfiledNodeState.NotExecuted)
+                {
+                    return hotspotMaxValueBrush;
+                }
+                return defaultRowBrush;
             }
         }
         public void UpdateHotspotValues(int minVal, int maxVal)
         {
             HotspotMinValue = minVal;
             HotspotMaxValue = maxVal;
-            //RaisePropertyChanged(nameof(RowBackground));
         }
 
 

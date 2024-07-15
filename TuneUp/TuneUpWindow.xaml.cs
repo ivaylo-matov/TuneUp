@@ -114,13 +114,13 @@ namespace TuneUp
             e.Handled = regex.IsMatch(e.Text);
         }
 
-        private void RefreshDataGrid()
-        {
-            if (NodeAnalysisTable.ItemsSource is ICollectionView collectionView)
-            {
-                collectionView.Refresh();
-            }
-        }
+        //private void RefreshDataGrid()
+        //{
+        //    if (NodeAnalysisTable.ItemsSource is ICollectionView collectionView)
+        //    {
+        //        collectionView.Refresh();
+        //    }
+        //}
     }
 
     #region Converters
