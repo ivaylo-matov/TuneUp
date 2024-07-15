@@ -154,8 +154,7 @@
                 Unchecked="HotspotToggleButton_Checked"/>
             <Label
                 Content="Show Node Hotspots"
-                FontFamily="{StaticResource ArtifaktElementRegular}"
-                Foreground="{StaticResource NodeNameForeground}"/>  
+                Style="{StaticResource SettingsLabelStyle}"/>  
             <TextBox
                 x:Name="MinValueNumberBox"
                 Style="{StaticResource NumberBoxStyle}"

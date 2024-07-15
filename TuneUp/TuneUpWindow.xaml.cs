@@ -59,8 +59,6 @@ namespace TuneUp
             uniqueId = id;
         }
 
-
-
         private void DynamoWindow_SizeChanged(object sender, System.Windows.SizeChangedEventArgs e)
         {
             // Update the new height of datagrid
@@ -113,14 +111,6 @@ namespace TuneUp
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
-
-        //private void RefreshDataGrid()
-        //{
-        //    if (NodeAnalysisTable.ItemsSource is ICollectionView collectionView)
-        //    {
-        //        collectionView.Refresh();
-        //    }
-        //}
     }
 
     #region Converters
