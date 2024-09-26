@@ -191,6 +191,18 @@ namespace TuneUp
         {
             ExportButton.ContextMenu.IsOpen = true;
         }        
+
+        /// <summary>
+        /// Sets focus on the ScrollViewer when it is loaded to ensure immediate scroll functionality.
+        /// </summary>
+        private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            var scrollViewer = sender as ScrollViewer;
+            if (scrollViewer != null)
+            {
+                scrollViewer.Focus();
+            }
+        }
     }
 
     #region Converters
