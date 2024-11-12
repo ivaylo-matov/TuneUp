@@ -86,9 +86,9 @@ namespace TuneUp
         private ObservableCollection<ProfiledNodeViewModel> ProfiledNodesPreviousRun1 = new ObservableCollection<ProfiledNodeViewModel>();
         private ObservableCollection<ProfiledNodeViewModel> ProfiledNodesNotExecuted1 = new ObservableCollection<ProfiledNodeViewModel>();
 
-        private HashSet<ProfiledNodeViewModel> ProfiledNodesLatestRun2 = new HashSet<ProfiledNodeViewModel>();
-        private HashSet<ProfiledNodeViewModel> ProfiledNodesPreviousRun2 = new HashSet<ProfiledNodeViewModel>();
-        private HashSet<ProfiledNodeViewModel> ProfiledNodesNotExecuted2 = new HashSet<ProfiledNodeViewModel>();
+        private HashSet<ProfiledNodeViewModel> tempProfiledNodesLatestRun = new HashSet<ProfiledNodeViewModel>();
+        private HashSet<ProfiledNodeViewModel> tempProfiledNodesPreviousRun = new HashSet<ProfiledNodeViewModel>();
+        private HashSet<ProfiledNodeViewModel> tempProfiledNodesNotExecuted = new HashSet<ProfiledNodeViewModel>();
 
 
 
@@ -435,11 +435,10 @@ namespace TuneUp
 
         private void CurrentWorkspaceModel_EvaluationStarted(object sender, EventArgs e)
         {
-            //ip code
-            // Replace collections
-            ProfiledNodesLatestRun2 = ProfiledNodesLatestRun.ToHashSet();
-            ProfiledNodesPreviousRun2 = ProfiledNodesPreviousRun.ToHashSet();
-            ProfiledNodesNotExecuted2 = ProfiledNodesNotExecuted.ToHashSet();
+            // Store nodes in temporary HashSets to batch the updates and avoid immediate UI refreshes.
+            tempProfiledNodesLatestRun = ProfiledNodesLatestRun.ToHashSet();
+            tempProfiledNodesPreviousRun = ProfiledNodesPreviousRun.ToHashSet();
+            tempProfiledNodesNotExecuted = ProfiledNodesNotExecuted.ToHashSet();
 
             IsRecomputeEnabled = false;
             foreach (var node in nodeDictionary.Values)
@@ -455,7 +454,7 @@ namespace TuneUp
                 // Move to CollectionPreviousRun
                 if (node.State == ProfiledNodeState.ExecutedOnPreviousRun)
                 {
-                    MoveNodeToCollection2(node, ProfiledNodesPreviousRun2);
+                    MoveNodeToTempCollection(node, tempProfiledNodesPreviousRun);
                 }
             }
             executedNodesNum = 1;
@@ -467,40 +466,14 @@ namespace TuneUp
             Task.Run(() =>
             {
                 IsRecomputeEnabled = true;
-
-                CalculateGroupNodes();
-                UpdateExecutionTime();
-                //UpdateTableVisibility();                
+                CalculateGroupNodes();                
 
                 uiContext.Post(_ =>
                 {
-                    // sort the time
-                    latestGraphExecutionTime = latestGraphExecutionTime1.ToString();
-                    previousGraphExecutionTime = previousGraphExecutionTime1.ToString();
-                    totalGraphExecutionTime = (latestGraphExecutionTime1 + previousGraphExecutionTime1).ToString();
-                    RaisePropertyChanged(nameof(LatestGraphExecutionTime));
-                    RaisePropertyChanged(nameof(PreviousGraphExecutionTime));
-                    RaisePropertyChanged(nameof(TotalGraphExecutionTime));
-
-                    // sort the nodes
-                    ProfiledNodesLatestRun.Clear();
-                    foreach (var node in ProfiledNodesLatestRun2)
-                    {
-                        ProfiledNodesLatestRun.Add(node);
-                    }
-                    ProfiledNodesPreviousRun.Clear();
-                    foreach (var node in ProfiledNodesPreviousRun2)
-                    {
-                        ProfiledNodesPreviousRun.Add(node);
-                    }
-                    ProfiledNodesNotExecuted.Clear();
-                    foreach (var node in ProfiledNodesNotExecuted2)
-                    {
-                        ProfiledNodesNotExecuted.Add(node);
-                    }
-                    RaisePropertyChanged(nameof(ProfiledNodesLatestRun));
-                    RaisePropertyChanged(nameof(ProfiledNodesPreviousRun));
-                    RaisePropertyChanged(nameof(ProfiledNodesNotExecuted));
+                    // Swap references instead of clearing and re-adding nodes
+                    ProfiledNodesLatestRun = new ObservableCollection<ProfiledNodeViewModel>(tempProfiledNodesLatestRun);
+                    ProfiledNodesPreviousRun = new ObservableCollection<ProfiledNodeViewModel>(tempProfiledNodesPreviousRun);
+                    ProfiledNodesNotExecuted = new ObservableCollection<ProfiledNodeViewModel>(tempProfiledNodesNotExecuted);
 
                     RaisePropertyChanged(nameof(ProfiledNodesCollectionLatestRun));
                     RaisePropertyChanged(nameof(ProfiledNodesCollectionPreviousRun));
@@ -513,16 +486,17 @@ namespace TuneUp
                     ProfiledNodesCollectionPreviousRun.View?.Refresh();
                     ProfiledNodesCollectionNotExecuted.View?.Refresh();
 
+                    // Update execution time and table visibility
+                    UpdateExecutionTime();
                     UpdateTableVisibility();
 
-                    ProfiledNodesLatestRun2 = new HashSet<ProfiledNodeViewModel>();
-                    ProfiledNodesPreviousRun2 = new HashSet<ProfiledNodeViewModel>();
-                    ProfiledNodesNotExecuted2 = new HashSet<ProfiledNodeViewModel>();
-
-
+                    // Clear temporary collections
+                    tempProfiledNodesLatestRun.Clear();
+                    tempProfiledNodesPreviousRun.Clear();
+                    tempProfiledNodesNotExecuted.Clear();
                 }, null);
 
-            });            
+            });
         }
 
         /// <summary>
@@ -531,35 +505,23 @@ namespace TuneUp
         /// </summary>
         private void UpdateExecutionTime()
         {
-            //// Reset execution time
-            //uiContext.Send(
-            //    x =>
-            //    {   // After each evaluation, manually update execution time column(s)
-            //        // Calculate total execution times using rounded node execution times, not exact values.
-            //        int totalLatestRun = ProfiledNodesLatestRun
-            //            .Where(n => n.WasExecutedOnLastRun && !n.IsGroup && !n.IsGroupExecutionTime)
-            //            .Sum(r => r?.ExecutionMilliseconds ?? 0);
-            //        int previousLatestRun = ProfiledNodesPreviousRun
-            //            .Where(n => !n.WasExecutedOnLastRun && !n.IsGroup && !n.IsGroupExecutionTime)
-            //            .Sum(r => r?.ExecutionMilliseconds ?? 0);
-
-            //        // Update latest and previous run times
-            //        latestGraphExecutionTime = totalLatestRun.ToString();
-            //        previousGraphExecutionTime = previousLatestRun.ToString();
-            //        totalGraphExecutionTime = (totalLatestRun + previousLatestRun).ToString();
-            //    }, null);
-
-            //RaisePropertyChanged(nameof(TotalGraphExecutionTime));
-            //RaisePropertyChanged(nameof(LatestGraphExecutionTime));
-            //RaisePropertyChanged(nameof(PreviousGraphExecutionTime));
-
-            // Reset execution time
-            int latestGraphExecutionTime1 = ProfiledNodesLatestRun2
+            // After each evaluation, manually update execution time column(s)
+            // Calculate total execution times using rounded node execution times, not exact values.
+            int totalLatestRun = ProfiledNodesLatestRun
                 .Where(n => n.WasExecutedOnLastRun && !n.IsGroup && !n.IsGroupExecutionTime)
                 .Sum(r => r?.ExecutionMilliseconds ?? 0);
-            int previousGraphExecutionTime1 = ProfiledNodesPreviousRun2
+            int previousLatestRun = ProfiledNodesPreviousRun
                 .Where(n => !n.WasExecutedOnLastRun && !n.IsGroup && !n.IsGroupExecutionTime)
                 .Sum(r => r?.ExecutionMilliseconds ?? 0);
+
+            // Update latest and previous run times
+            latestGraphExecutionTime = totalLatestRun.ToString();
+            previousGraphExecutionTime = previousLatestRun.ToString();
+            totalGraphExecutionTime = (totalLatestRun + previousLatestRun).ToString();
+
+            RaisePropertyChanged(nameof(TotalGraphExecutionTime));
+            RaisePropertyChanged(nameof(LatestGraphExecutionTime));
+            RaisePropertyChanged(nameof(PreviousGraphExecutionTime));
         }
 
         /// <summary>
@@ -569,60 +531,7 @@ namespace TuneUp
         /// </summary>
         private void CalculateGroupNodes()
         {
-            //Task.Run(() =>
-            //{
-            //    // Apply all removals and additions on the UI thread
-            //    uiContext.Post(_ =>
-            //    {
-            //        // Clean the collections from all group and time nodes
-            //        foreach (var node in groupDictionary.Values)
-            //        {
-            //            RemoveNodeFromStateCollection(node, node.State);
-
-            //            if (groupModelDictionary.TryGetValue(node.GroupGUID, out var groupNodes))
-            //            {
-            //                groupNodes.Remove(node);
-            //            }
-            //        }
-            //        groupDictionary.Clear();
-
-            //        // Create group and time nodes for latest and previous runs
-            //        CreateGroupNodesForCollection(ProfiledNodesLatestRun);
-            //        CreateGroupNodesForCollection(ProfiledNodesPreviousRun);
-
-            //        // Create group nodes for not executed 
-            //        var processedNodesNotExecuted = new HashSet<ProfiledNodeViewModel>();
-
-            //        // Create a copy of ProfiledNodesNotExecuted to iterate over
-            //        var profiledNodesCopy = ProfiledNodesNotExecuted.ToList();
-
-            //        foreach (var pNode in profiledNodesCopy)
-            //        {
-            //            if (pNode.GroupGUID != Guid.Empty && !processedNodesNotExecuted.Contains(pNode))
-            //            {
-            //                // get the other nodes from this group
-            //                var nodesInGroup = ProfiledNodesNotExecuted
-            //                    .Where(n => n.GroupGUID == pNode.GroupGUID)
-            //                    .ToList();
-
-            //                foreach (var node in nodesInGroup)
-            //                {
-            //                    processedNodesNotExecuted.Add(node);
-            //                }
-
-            //                // create new group node
-            //                var pGroup = CreateAndRegisterGroupNode(pNode);
-            //                uiContext.Send(_ => ProfiledNodesNotExecuted.Add(pGroup), null);
-            //            }
-            //        }
-
-            //        RefreshGroupNodeUI();
-            //    }, null);
-            //});
-
-
-
-            // Clean the collections from all group and time nodes
+            // Clean the collections from all group and time nodesB
             foreach (var node in groupDictionary.Values)
             {
                 RemoveNodeFromStateCollection2(node, node.State);
@@ -635,21 +544,21 @@ namespace TuneUp
             groupDictionary.Clear();
 
             // Create group and time nodes for latest and previous runs
-            CreateGroupNodesForCollection(ProfiledNodesLatestRun2);
-            CreateGroupNodesForCollection(ProfiledNodesPreviousRun2);
+            CreateGroupNodesForCollection(tempProfiledNodesLatestRun);
+            CreateGroupNodesForCollection(tempProfiledNodesPreviousRun);
 
             // Create group nodes for not executed 
             var processedNodesNotExecuted = new HashSet<ProfiledNodeViewModel>();
 
             // Create a copy of ProfiledNodesNotExecuted to iterate over
-            var profiledNodesCopy = ProfiledNodesNotExecuted2.ToList();
+            var profiledNodesCopy = tempProfiledNodesNotExecuted.ToList();
 
             foreach (var pNode in profiledNodesCopy)
             {
                 if (pNode.GroupGUID != Guid.Empty && !processedNodesNotExecuted.Contains(pNode))
                 {
                     // get the other nodes from this group
-                    var nodesInGroup = ProfiledNodesNotExecuted2
+                    var nodesInGroup = tempProfiledNodesNotExecuted
                         .Where(n => n.GroupGUID == pNode.GroupGUID)
                         .ToList();
 
@@ -660,8 +569,7 @@ namespace TuneUp
 
                     // create new group node
                     var pGroup = CreateAndRegisterGroupNode(pNode);
-                    //uiContext.Send(_ => ProfiledNodesNotExecuted.Add(pGroup), null);
-                    ProfiledNodesNotExecuted2.Add(pGroup);
+                    tempProfiledNodesNotExecuted.Add(pGroup);
                 }
             }
         }
@@ -743,7 +651,7 @@ namespace TuneUp
                 {
                     profiledNode.ExecutionOrderNumber = executedNodesNum++;
                     // Move to collection LatestRun
-                    MoveNodeToCollection2(profiledNode, ProfiledNodesLatestRun2);
+                    MoveNodeToTempCollection(profiledNode, tempProfiledNodesLatestRun);
                 }
             }
 
@@ -981,7 +889,7 @@ namespace TuneUp
         }
 
         private void CurrentWorkspaceModel_GroupAdded(AnnotationModel group)
-        {
+        {            
             group.PropertyChanged += OnGroupPropertyChanged;
 
             var groupGUID = group.GUID;
@@ -1242,9 +1150,9 @@ namespace TuneUp
         /// </summary>
         private ObservableCollection<ProfiledNodeViewModel> GetObservableCollectionFromState(ProfiledNodeState state)
         {
-            if (state == ProfiledNodeState.ExecutedOnCurrentRun) return ProfiledNodesLatestRun1;
-            else if (state == ProfiledNodeState.ExecutedOnPreviousRun) return ProfiledNodesPreviousRun1;
-            else return ProfiledNodesNotExecuted1;
+            if (state == ProfiledNodeState.ExecutedOnCurrentRun) return ProfiledNodesLatestRun;
+            else if (state == ProfiledNodeState.ExecutedOnPreviousRun) return ProfiledNodesPreviousRun;
+            else return ProfiledNodesNotExecuted;
         }
 
         /// <summary>
@@ -1413,9 +1321,9 @@ namespace TuneUp
 
             targetCollection?.Add(profiledNode);
         }
-        private void MoveNodeToCollection2(ProfiledNodeViewModel profiledNode, HashSet<ProfiledNodeViewModel> targetCollection)
+        private void MoveNodeToTempCollection(ProfiledNodeViewModel profiledNode, HashSet<ProfiledNodeViewModel> targetCollection)
         {
-            var collections = new[] { ProfiledNodesLatestRun2, ProfiledNodesPreviousRun2, ProfiledNodesNotExecuted2 };
+            var collections = new[] { tempProfiledNodesLatestRun, tempProfiledNodesPreviousRun, tempProfiledNodesNotExecuted };
 
             foreach (var collection in collections)
             {
@@ -1442,9 +1350,9 @@ namespace TuneUp
         }
         private HashSet<ProfiledNodeViewModel> GetObservableCollectionFromState2(ProfiledNodeState state)
         {
-            if (state == ProfiledNodeState.ExecutedOnCurrentRun) return ProfiledNodesLatestRun2;
-            else if (state == ProfiledNodeState.ExecutedOnPreviousRun) return ProfiledNodesPreviousRun2;
-            else return ProfiledNodesNotExecuted2;
+            if (state == ProfiledNodeState.ExecutedOnCurrentRun) return tempProfiledNodesLatestRun;
+            else if (state == ProfiledNodeState.ExecutedOnPreviousRun) return tempProfiledNodesPreviousRun;
+            else return tempProfiledNodesNotExecuted;
         }
 
         #endregion
