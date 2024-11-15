@@ -1318,19 +1318,6 @@ namespace TuneUp
         /// <summary>
         /// Removes a node from the appropriate collection based on its state.
         /// </summary>
-        private void RemoveNodeFromStateCollection(ProfiledNodeViewModel pNode, ProfiledNodeState state)
-        {
-            var collection = GetObservableCollectionFromState(state);
-
-            collection?.Remove(pNode);
-        }
-        private void RemoveNodeFromStateHashSet(ProfiledNodeViewModel pNode, ProfiledNodeState state)
-        {
-            var collection = GetTempCollectionFromState(state);
-
-            collection?.Remove(pNode);
-        }
-
         private void RemoveNodeFromState<T>(ProfiledNodeViewModel pNode, ProfiledNodeState state, Func<ProfiledNodeState, T> getCollectionFunc) where T : ICollection<ProfiledNodeViewModel>
         {
             var collection = getCollectionFunc(state);
