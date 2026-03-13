@@ -670,7 +670,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <!--  Execution Time  -->
-                            <DataGridTextColumn Width="145" />
+                            <DataGridTextColumn Width="145" IsReadOnly="True" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>
